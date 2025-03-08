@@ -29,7 +29,11 @@ def connect_with_middleware(contract_json):
 	bsc_url = "https://bsc-testnet-rpc.publicnode.com"
 	w3 = Web3(HTTPProvider(bsc_url))
 
-	assert w3.is_connected(), f"Failed to connect to provider at {bsc_url}"
+	if not w3.is_connected():
+  	raise ConnectionError(f"❌ Failed to connect to BSC provider at {bsc_url}")
+
+	
+	#assert w3.is_connected(), f"Failed to connect to provider at {bsc_url}"
 	
 
 	# The second section requires you to inject middleware into your w3 object and
