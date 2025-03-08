@@ -36,7 +36,7 @@ def connect_with_middleware(contract_json):
 	# and https://web3py.readthedocs.io/en/stable/web3.contract.html
 	
 	#Inject middleware for Proof-of-Authority (PoA) chains (required for BSC)
-	w3.middleware_onion.inject(geth_poa_middleware, layer = 0)
+	w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
 
 	#Create contract object
 	contract = w3.eth.contract(address=Web3.to_checksum_address(address), abi=abi)
