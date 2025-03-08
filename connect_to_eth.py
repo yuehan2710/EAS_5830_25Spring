@@ -11,32 +11,35 @@ infura_url = f"https://mainnet.infura.io/v3/{infura_token}"
 '''
 
 def connect_to_eth():
-	url = "https://eth.nownodes.io/{now_token}"  # FILL THIS IN
+	url = "https://bsc-testnet-rpc.publicnode.com"  # FILL THIS IN
 	w3 = Web3(HTTPProvider(url))
 	assert w3.is_connected(), f"Failed to connect to provider at {url}"
+
 	return w3
 
-
 def connect_with_middleware(contract_json):
-	
-
-	# TODO complete this method
-	# The first section will be the same as "connect_to_eth()" but with a BNB url
-	bsc_url = "https://bsc-testnet-rpc.publicnode.com"
-	
-	w3 = Web3(HTTPProvider(bsc_url))
-
-	#Inject middleware for Proof-of-Authority (PoA) chains (required for BSC)
-	w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
-
-	assert w3.is_connected(), f"Failed to connect to provider at {bsc_url}"
-	print("Successfully connected to Binance Smart Chain!")
-
 	with open(contract_json, "r") as f:
 		d = json.load(f)
 		d = d['bsc']
 		address = d['address']
 		abi = d['abi']
+
+	
+	# TODO complete this method
+	# The first section will be the same as "connect_to_eth()" but with a BNB url
+	
+	bsc_url = "https://bsc-testnet-rpc.publicnode.com"
+	
+	w3 = Web3(HTTPProvider(bsc_url))
+
+
+	assert w3.is_connected(), f"Failed to connect to provider at {bsc_url}"
+	print("Successfully connected to Binance Smart Chain!")
+
+	# Inject PoA middleware (required for BSC)
+    	w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
+
+	
 
 	# The second section requires you to inject middleware into your w3 object and
 	# create a contract object. Read more on the docs pages at https://web3py.readthedocs.io/en/stable/middleware.html
