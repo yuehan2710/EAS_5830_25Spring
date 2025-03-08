@@ -11,7 +11,7 @@ infura_url = f"https://mainnet.infura.io/v3/{infura_token}"
 '''
 
 def connect_to_eth():
-	url = ""  # FILL THIS IN
+	url = "https://eth.nownodes.io/{now_token}"  # FILL THIS IN
 	w3 = Web3(HTTPProvider(url))
 	assert w3.is_connected(), f"Failed to connect to provider at {url}"
 	return w3
@@ -26,7 +26,7 @@ def connect_with_middleware(contract_json):
 
 	# TODO complete this method
 	# The first section will be the same as "connect_to_eth()" but with a BNB url
-	bsc_url = "https://eth.nownodes.io/{now_token}"
+	bsc_url = "https://bsc-dataseed.binance.org"
 	w3 = Web3(HTTPProvider(bsc_url))
 
 	assert w3.is_connected(), f"Failed to connect to provider at {bsc_url}"
@@ -35,8 +35,10 @@ def connect_with_middleware(contract_json):
 	# create a contract object. Read more on the docs pages at https://web3py.readthedocs.io/en/stable/middleware.html
 	# and https://web3py.readthedocs.io/en/stable/web3.contract.html
 	
+	#Inject middleware for Proof-of-Authority (PoA) chains (required for BSC)
 	w3.middleware_onion.inject(geth_poa_middleware, layer = 0)
 
+	#Create contract object
 	contract = w3.eth.contract(address=Web3.to_checksum_address(address), abi=abi)
 
 	return w3, contract
