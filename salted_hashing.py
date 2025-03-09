@@ -1,7 +1,7 @@
 import hashlib
 import os
 
-def myhash(m):
+def my_hash(m):
     #Generate random nonce
     nonce = os.urandom(16).hex()  # Convert to a hex string
 
