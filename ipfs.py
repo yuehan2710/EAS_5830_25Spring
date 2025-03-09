@@ -10,6 +10,7 @@ PINATA_SECRET_API_KEY = "e7b6f2e0f1dacc23fb86155f1d9e60c7b8956b3b38b34eae3636585
 
 # Headers for Pinata authentication
 HEADERS = {
+	"Content-Type": "application/json",
   "pinata_api_key": PINATA_API_KEY,
   "pinata_secret_api_key": PINATA_SECRET_API_KEY
 }
