@@ -60,14 +60,14 @@ def is_ordered_block(w3, block_num):
 	transactions = block.transactions
 
 	# Check if baseFeePerGas exists in block (EIP-1559 support)
-	base_fee = block.get('baseFeePerGas', 0)
+	base_fee = getattr(block, 'baseFeePerGas', 0)
 	
 	priority_fees = []
 	for tx in transactions:
 		if hasattr(tx, 'maxPriorityFeePerGas') and hasattr(tx, 'maxFeePerGas'):
 			priority_fee = min(tx.maxPriorityFeePerGas, tx.maxFeePerGas - base_fee)
 		else:
-			priority_fee = tx.gasPrice - base_fee
+			priority_fee = tx.gasPrice - base_fee if hasattr(tx, 'gasPrice') else 0
 		priority_fees.append(priority_fee)
 	
 	return priority_fees == sorted(priority_fees, reverse=True)
@@ -93,15 +93,26 @@ def get_contract_values(contract, admin_address, owner_address):
 	# TODO complete the following lines by performing contract calls
 	
 	# Get and return the merkleRoot from the provided contract
-	onchain_root = contract.functions.merkleRoot().call()  
+	# Fetch merkleRoot from the contract
+	try:
+		onchain_root = contract.functions.merkleRoot().call()
+	except Exception as e:
+		print(f"Error retrieving merkleRoot: {e}")
+		onchain_root = None 
 	
 	# Check the contract to see if the address "admin_address" has the role "default_admin_role"
-	has_role = contract.functions.hasRole(default_admin_role, admin_address).call()  
+	# Check if admin_address has the default_admin_role
+	try:
+		has_role = contract.functions.hasRole(default_admin_role, admin_address).call()
+	except Exception as e:
+		print(f"Error checking admin role: {e}")
+		has_role = False
 	
 	# Verify existence of function before calling
 	try:
 		prime = contract.functions.getPrime(owner_address).call()
-	except AttributeError:
+	except Exception as e:
+		print(f"Error retrieving prime: {e}")
 		prime = None  # Handle the missing function gracefully
 	
 	return onchain_root, has_role, prime
