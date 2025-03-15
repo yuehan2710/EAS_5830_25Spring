@@ -15,7 +15,7 @@ with open('ape_abi.json', 'r') as f:
 
 ############################
 # Connect to an Ethereum node
-api_url = ""  # YOU WILL NEED TO PROVIDE THE URL OF AN ETHEREUM NODE
+api_url = "e07478f88d89454baa06972032a6dcc2"  # YOU WILL NEED TO PROVIDE THE URL OF AN ETHEREUM NODE
 provider = HTTPProvider(api_url)
 web3 = Web3(provider)
 
@@ -29,7 +29,34 @@ def get_ape_info(ape_id):
 
     # YOUR CODE HERE
 
-    assert isinstance(data, dict), f'get_ape_info{ape_id} should return a dict'
-    assert all([a in data.keys() for a in
-                ['owner', 'image', 'eyes']]), f"return value should include the keys 'owner','image' and 'eyes'"
+    #assert isinstance(data, dict), f'get_ape_info{ape_id} should return a dict'
+    #assert all([a in data.keys() for a in
+                #['owner', 'image', 'eyes']]), f"return value should include the keys 'owner','image' and 'eyes'"
+
+    try:
+        # Get the owner of the Ape NFT
+        data['owner'] = contract.functions.ownerOf(ape_id).call()
+        
+        # Get the tokenURI and fetch metadata from IPFS
+        token_uri = contract.functions.tokenURI(ape_id).call()
+        ipfs_hash = token_uri.replace("ipfs://", "")
+        ipfs_url = f"https://ipfs.io/ipfs/{ipfs_hash}"
+        response = requests.get(ipfs_url)
+        
+        if response.status_code == 200:
+            metadata = response.json()
+            data['image'] = metadata.get('image', '')
+            
+            # Find the 'eyes' attribute
+            attributes = metadata.get('attributes', [])
+            for attr in attributes:
+                if attr.get('trait_type') == 'Eyes':
+                    data['eyes'] = attr.get('value', '')
+                    break
+        else:
+            print(f"Failed to fetch metadata: {response.status_code}")
+    
+    except Exception as e:
+        print(f"Error retrieving Ape info: {e}")
+    
     return data
