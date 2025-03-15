@@ -58,7 +58,10 @@ def is_ordered_block(w3, block_num):
 
 	# TODO YOUR CODE HERE
 	transactions = block.transactions
-    
+
+	# Check if baseFeePerGas exists in block (EIP-1559 support)
+	base_fee = block.get('baseFeePerGas', 0)
+	
 	priority_fees = []
 	for tx in transactions:
 		if hasattr(tx, 'maxPriorityFeePerGas') and hasattr(tx, 'maxFeePerGas'):
@@ -68,6 +71,7 @@ def is_ordered_block(w3, block_num):
 		priority_fees.append(priority_fee)
 	
 	return priority_fees == sorted(priority_fees, reverse=True)
+    
 
 
 def get_contract_values(contract, admin_address, owner_address):
@@ -87,13 +91,19 @@ def get_contract_values(contract, admin_address, owner_address):
 	default_admin_role = int.to_bytes(0, 32, byteorder="big")
 
 	# TODO complete the following lines by performing contract calls
-	onchain_root = contract.functions.merkleRoot().call()  # Get and return the merkleRoot from the provided contract
-	has_role = contract.functions.hasRole(default_admin_role, admin_address).call()  # Check the contract to see if the address "admin_address" has the role "default_admin_role"
-	if hasattr(contract.functions, 'getPrime'):
+	
+	# Get and return the merkleRoot from the provided contract
+	onchain_root = contract.functions.merkleRoot().call()  
+	
+	# Check the contract to see if the address "admin_address" has the role "default_admin_role"
+	has_role = contract.functions.hasRole(default_admin_role, admin_address).call()  
+	
+	# Verify existence of function before calling
+	try:
 		prime = contract.functions.getPrime(owner_address).call()
-	else:
-		raise ValueError("The function 'getPrime' was not found in this contract's ABI.")
-    
+	except AttributeError:
+		prime = None  # Handle the missing function gracefully
+	
 	return onchain_root, has_role, prime
 
 
