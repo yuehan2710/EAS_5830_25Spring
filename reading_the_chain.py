@@ -98,23 +98,26 @@ def get_contract_values(contract, admin_address, owner_address):
 		onchain_root = contract.functions.merkleRoot().call()
 	except Exception as e:
 		print(f"Error retrieving merkleRoot: {e}")
-		onchain_root = None 
+		onchain_root = None
 	
 	# Check the contract to see if the address "admin_address" has the role "default_admin_role"
+	# Get the default admin role identifier
+	try:
+		default_admin_role = contract.functions.DEFAULT_ADMIN_ROLE().call()
+	except Exception as e:
+		print(f"Error retrieving DEFAULT_ADMIN_ROLE: {e}")
+		default_admin_role = None
+	
 	# Check if admin_address has the default_admin_role
 	try:
-		has_role = contract.functions.hasRole(default_admin_role, admin_address).call()
+		has_role = contract.functions.hasRole(default_admin_role, admin_address).call() if default_admin_role else False
 	except Exception as e:
 		print(f"Error checking admin role: {e}")
 		has_role = False
 	
-	# Verify existence of function before calling
+	# Get the prime owned by the owner_address
 	try:
-		if hasattr(contract.functions, 'getPrime'):
-			prime = contract.functions.getPrime(owner_address).call()
-		else:
-			print("Warning: getPrime function is not found in contract ABI.")
-			prime = None
+		prime = contract.functions.getPrimeByOwner(owner_address).call()
 	except Exception as e:
 		print(f"Error retrieving prime: {e}")
 		prime = None  # Handle the missing function gracefully
