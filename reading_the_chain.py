@@ -90,9 +90,9 @@ def get_contract_values(contract, admin_address, owner_address):
 	onchain_root = contract.functions.merkleRoot().call()  # Get and return the merkleRoot from the provided contract
 	has_role = contract.functions.hasRole(default_admin_role, admin_address).call()  # Check the contract to see if the address "admin_address" has the role "default_admin_role"
 	if hasattr(contract.functions, 'getPrime'):
-    prime = contract.functions.getPrime(owner_address).call()
+		prime = contract.functions.getPrime(owner_address).call()
   else:
-    raise ValueError("The function 'getPrime' was not found in this contract's ABI.")
+		raise ValueError("The function 'getPrime' was not found in this contract's ABI.")
     
 	return onchain_root, has_role, prime
 
