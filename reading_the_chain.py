@@ -61,10 +61,10 @@ def is_ordered_block(w3, block_num):
     
 	priority_fees = []
 	for tx in transactions:
-		if "maxPriorityFeePerGas" in tx and "maxFeePerGas" in tx:
-				priority_fee = min(tx.maxPriorityFeePerGas, tx.maxFeePerGas - block.baseFeePerGas)
+		if hasattr(tx, 'maxPriorityFeePerGas') and hasattr(tx, 'maxFeePerGas'):
+			priority_fee = min(tx.maxPriorityFeePerGas, tx.maxFeePerGas - base_fee)
 		else:
-				priority_fee = tx.gasPrice - block.baseFeePerGas
+			priority_fee = tx.gasPrice - base_fee
 		priority_fees.append(priority_fee)
 	
 	return priority_fees == sorted(priority_fees, reverse=True)
@@ -89,8 +89,11 @@ def get_contract_values(contract, admin_address, owner_address):
 	# TODO complete the following lines by performing contract calls
 	onchain_root = contract.functions.merkleRoot().call()  # Get and return the merkleRoot from the provided contract
 	has_role = contract.functions.hasRole(default_admin_role, admin_address).call()  # Check the contract to see if the address "admin_address" has the role "default_admin_role"
-	prime = contract.functions.getPrime(owner_address).call()  # Call the contract to get the prime owned by "owner_address"
-
+	if hasattr(contract.functions, 'getPrime'):
+    prime = contract.functions.getPrime(owner_address).call()
+  else:
+    raise ValueError("The function 'getPrime' was not found in this contract's ABI.")
+    
 	return onchain_root, has_role, prime
 
 
