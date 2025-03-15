@@ -110,7 +110,11 @@ def get_contract_values(contract, admin_address, owner_address):
 	
 	# Verify existence of function before calling
 	try:
-		prime = contract.functions.getPrime(owner_address).call()
+		if hasattr(contract.functions, 'getPrime'):
+			prime = contract.functions.getPrime(owner_address).call()
+		else:
+			print("Warning: getPrime function is not found in contract ABI.")
+			prime = None
 	except Exception as e:
 		print(f"Error retrieving prime: {e}")
 		prime = None  # Handle the missing function gracefully
