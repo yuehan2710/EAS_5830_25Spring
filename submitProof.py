@@ -25,7 +25,7 @@ def merkle_assignment():
     tree = build_merkle(leaves)
 
     # Select a random leaf and create a proof for that leaf
-    random_leaf_index = 0 #TODO generate a random index from primes to claim (0 is already claimed)
+    random_leaf_index = random.randint(1, 8191) #TODO generate a random index from primes to claim (0 is already claimed)
     proof = prove_merkle(tree, random_leaf_index)
 
     # This is the same way the grader generates a challenge for sign_challenge()
@@ -37,7 +37,7 @@ def merkle_assignment():
         tx_hash = '0x'
         # TODO, when you are ready to attempt to claim a prime (and pay gas fees),
         #  complete this method and run your code with the following line un-commented
-        # tx_hash = send_signed_msg(proof, leaves[random_leaf_index])
+        tx_hash = send_signed_msg(proof, leaves[random_leaf_index])
 
 
 def generate_primes(num_primes):
@@ -48,6 +48,18 @@ def generate_primes(num_primes):
     primes_list = []
 
     #TODO YOUR CODE HERE
+    n = 2
+    while len(primes_list) < num_primes:
+        is_prime = True
+        for p in primes_list:
+            if p * p > n:
+                break
+            if n % p == 0:
+                is_prime = False
+                break
+        if is_prime:
+            primes_list.append(n)
+        n += 1
 
     return primes_list
 
@@ -60,7 +72,14 @@ def convert_leaves(primes_list):
 
     # TODO YOUR CODE HERE
 
-    return []
+    leaves = []
+    for p in primes_list:
+        # Convert prime to 32-byte big endian and hash it
+        b = int.to_bytes(p, 32, 'big')  # bytes32
+        h = Web3.solidity_keccak(['bytes32'], [b])  # hash as leaf
+        leaves.append(h)
+
+    return leaves
 
 
 def build_merkle(leaves):
@@ -72,7 +91,18 @@ def build_merkle(leaves):
     """
 
     #TODO YOUR CODE HERE
-    tree = []
+    tree = [leaves]
+    current_level = leaves
+
+    while len(current_level) > 1:
+        next_level = []
+        for i in range(0, len(current_level), 2):
+            a = current_level[i]
+            b = current_level[i + 1] if i + 1 < len(current_level) else a  # duplicate if odd
+            combined = hash_pair(a, b)
+            next_level.append(combined)
+        tree.append(next_level)
+        current_level = next_level
 
     return tree
 
@@ -86,6 +116,11 @@ def prove_merkle(merkle_tree, random_indx):
     """
     merkle_proof = []
     # TODO YOUR CODE HERE
+    for level in merkle_tree[:-1]:
+        sibling_index = index ^ 1  # XOR flip LSB to get sibling
+        if sibling_index < len(level):
+            merkle_proof.append(level[sibling_index])
+        index //= 2
 
     return merkle_proof
 
@@ -98,15 +133,22 @@ def sign_challenge(challenge):
         This method is to allow the auto-grader to verify that you have
         claimed a prime
     """
-    acct = get_account()
+    #acct = get_account()
 
-    addr = acct.address
-    eth_sk = acct.key
+    #addr = acct.address
+    #eth_sk = acct.key
 
     # TODO YOUR CODE HERE
-    eth_sig_obj = 'placeholder'
+    #eth_sig_obj = 'placeholder'
 
-    return addr, eth_sig_obj.signature.hex()
+    #return addr, eth_sig_obj.signature.hex()
+
+    acct = get_account()
+    eth_encoded_msg = eth_account.messages.encode_defunct(text=challenge)
+    signature = eth_account.Account.sign_message(eth_encoded_msg, acct.key)
+
+    return acct.address, signature.signature.hex()
+
 
 
 def send_signed_msg(proof, random_leaf):
@@ -122,9 +164,24 @@ def send_signed_msg(proof, random_leaf):
     w3 = connect_to(chain)
 
     # TODO YOUR CODE HERE
-    tx_hash = 'placeholder'
+    #tx_hash = 'placeholder'
 
-    return tx_hash
+    contract = w3.eth.contract(address=address, abi=abi)
+    nonce = w3.eth.get_transaction_count(acct.address)
+
+    tx = contract.functions.submit(random_leaf, proof).build_transaction({
+        'from': acct.address,
+        'nonce': nonce,
+        'gas': 300000,
+        'gasPrice': w3.to_wei('10', 'gwei')
+    })
+
+    signed_tx = w3.eth.account.sign_transaction(tx, private_key=acct.key)
+    tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+
+    return w3.to_hex(tx_hash)
+
+    #return tx_hash
 
 
 # Helper functions that do not need to be modified
