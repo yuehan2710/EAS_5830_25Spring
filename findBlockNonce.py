@@ -19,6 +19,21 @@ def mine_block(k, prev_hash, transactions):
         return b'\x00'
 
     # TODO your code to find a nonce here
+    base_data = prev_hash
+    for line in transactions:
+        base_data += line.encode('utf-8')
+
+    nonce_int = 0
+    while True:
+        nonce_bytes = str(nonce_int).encode('utf-8')
+        hash_result = hashlib.sha256(base_data + nonce_bytes).digest()
+        bin_hash = bin(int.from_bytes(hash_result, byteorder='big'))  # Convert hash to binary string
+
+        if bin_hash.endswith('0' * k):  # Check if hash ends with k zeros
+            nonce = nonce_bytes
+            break
+
+        nonce_int += 1
 
     assert isinstance(nonce, bytes), 'nonce should be of type bytes'
     return nonce
