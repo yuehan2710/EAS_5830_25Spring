@@ -117,10 +117,10 @@ def prove_merkle(merkle_tree, random_indx):
     merkle_proof = []
     # TODO YOUR CODE HERE
     for level in merkle_tree[:-1]:
-        sibling_index = index ^ 1  # XOR flip LSB to get sibling
+        sibling_index = random_indx ^ 1  # XOR flip LSB to get sibling
         if sibling_index < len(level):
             merkle_proof.append(level[sibling_index])
-        index //= 2
+        random_indx //= 2
 
     return merkle_proof
 
