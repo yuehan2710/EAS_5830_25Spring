@@ -146,13 +146,10 @@ def sign_challenge(challenge):
     acct = get_account()
     
     # Encode the challenge in EIP-191 format
-    message_hash = Web3.keccak(text=challenge)
+    message = encode_defunct(text=challenge)
+    signed_msg = acct.sign_message(message)
     
-    # Sign the message 
-    signature = acct.signHash(message_hash).signature.hex()
-    
-    # Return address and hex signature
-    return acct.address, signature
+    return acct.address, signed_msg.signature.hex()
 
 
 
@@ -164,25 +161,21 @@ def send_signed_msg(proof, random_leaf):
     """
     chain = 'bsc'
 
-    acct = get_account()  # LocalAccount object
-    address, abi = get_contract_info(chain)
+    acct = get_account()
+    contract_address, abi = get_contract_info(chain)
     w3 = connect_to(chain)
-
-    # Instantiate the contract
-    contract = w3.eth.contract(address=address, abi=abi)
-
-    # Build transaction
-    tx = contract.functions.submit(
-        random_leaf,  # The prime in bytes32 format
-        proof         # Your Merkle proof
-    ).build_transaction({
-        'chainId': 56,  # BSC mainnet
-        'gas': 300000,  # Sufficient for Merkle proof verification
-        'gasPrice': w3.to_wei('5', 'gwei'),  # Adjust based on network conditions
+    
+    # Create contract instance
+    contract = w3.eth.contract(address=contract_address, abi=abi)
+    
+    # Build and send transaction
+    tx = contract.functions.submit(random_leaf, proof).build_transaction({
+        'chainId': 56,  # BSC chain ID
+        'gas': 300000,
+        'gasPrice': w3.to_wei('5', 'gwei'),
         'nonce': w3.eth.get_transaction_count(acct.address),
     })
     
-    # Sign and send transaction
     signed_tx = w3.eth.account.sign_transaction(tx, acct.key)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
     
