@@ -74,11 +74,10 @@ def convert_leaves(primes_list):
 
     leaves = []
     for p in primes_list:
-        # Convert to fixed 32-byte big-endian
-        b = int.to_bytes(p, 32, 'big')  # Must be 32 bytes
-        # Hash the bytes32 representation of the integer
-        h = Web3.solidity_keccak(['bytes32'], [b])  # OpenZeppelin expects hash of bytes32
-        leaves.append(h)
+        # Convert directly to bytes32 (no additional hashing)
+        b = int.to_bytes(p, 32, 'big')
+        leaves.append(b)
+        
     return leaves
 
 
@@ -92,20 +91,24 @@ def build_merkle(leaves):
 
     #TODO YOUR CODE HERE
 
+    if not leaves:
+        return []
+
+    # Validate leaves are bytes32 (32 bytes)
     assert all(isinstance(leaf, bytes) and len(leaf) == 32 for leaf in leaves), "Leaves must be bytes32"
 
-    tree = [leaves]
-    current = leaves
+    tree = [leaves.copy()]  # Start with copy of leaves
+    current_level = leaves
 
-    while len(current) > 1:
+    while len(current_level) > 1:
         next_level = []
-        for i in range(0, len(current), 2):
-            left = current[i]
-            right = current[i + 1] if i + 1 < len(current) else left
+        for i in range(0, len(current_level), 2):
+            left = current_level[i]
+            right = current_level[i+1] if i+1 < len(current_level) else left
             parent = hash_pair(left, right)
             next_level.append(parent)
         tree.append(next_level)
-        current = next_level
+        current_level = next_level
 
     return tree
 
