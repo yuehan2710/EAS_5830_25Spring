@@ -121,10 +121,10 @@ def prove_merkle(merkle_tree, random_indx):
     # TODO YOUR CODE HERE
 
     for level in merkle_tree[:-1]:  # Don't include root
-        sibling_index = random_indx ^ 1
+        sibling_index = random_indx ^ 1  # XOR flips last bit to get sibling
         if sibling_index < len(level):
             merkle_proof.append(level[sibling_index])
-        random_indx //= 2
+        random_indx //= 2  # Move to parent index 
 
     return merkle_proof
 
@@ -185,7 +185,7 @@ def send_signed_msg(proof, random_leaf):
     signed_tx = acct.sign_transaction(tx)
 
     # Send the raw transaction to the network
-    tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+    tx_hash = w3.eth.send_raw_transaction(signed_tx['rawTransaction'])
 
     print("Submitted transaction with hash:", w3.to_hex(tx_hash))
     return w3.to_hex(tx_hash)
