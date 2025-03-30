@@ -146,13 +146,13 @@ def sign_challenge(challenge):
     acct = get_account()
     
     # Encode the challenge in EIP-191 format
-    message = encode_defunct(text=challenge)
+    message_hash = Web3.keccak(text=challenge)
     
-    # Sign the message (EIP-191 compliant)
-    signed_msg = acct.sign_message(message)
+    # Sign the message 
+    signature = acct.signHash(message_hash).signature.hex()
     
     # Return address and hex signature
-    return acct.address, signed_msg.signature.hex()
+    return acct.address, signature
 
 
 
@@ -176,7 +176,7 @@ def send_signed_msg(proof, random_leaf):
         random_leaf,  # The prime in bytes32 format
         proof         # Your Merkle proof
     ).build_transaction({
-        'chainId': chain_id,
+        'chainId': 56,  # BSC mainnet
         'gas': 300000,  # Sufficient for Merkle proof verification
         'gasPrice': w3.to_wei('5', 'gwei'),  # Adjust based on network conditions
         'nonce': w3.eth.get_transaction_count(acct.address),
