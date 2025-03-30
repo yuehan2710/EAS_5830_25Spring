@@ -140,21 +140,21 @@ def sign_challenge(challenge):
         This method is to allow the auto-grader to verify that you have
         claimed a prime
     """
-    #acct = get_account()
-
-    #addr = acct.address
-    #eth_sk = acct.key
-
-    # TODO YOUR CODE HERE
-    #eth_sig_obj = 'placeholder'
-
-    #return addr, eth_sig_obj.signature.hex()
 
     acct = get_account()
-    eth_encoded_msg = eth_account.messages.encode_defunct(text=challenge)
-    signature = eth_account.Account.sign_message(eth_encoded_msg, acct.key)
 
-    return acct.address, signature.signature.hex()
+    addr = acct.address
+    eth_sk = acct.key
+
+    # TODO YOUR CODE HERE
+
+    # Convert the challenge string to bytes and prepare it for signing
+    message = encode_defunct(text=challenge)
+
+    # Sign the message
+    eth_sig_obj = acct.sign_message(message)
+
+    return addr, eth_sig_obj.signature.hex()
 
 
 
