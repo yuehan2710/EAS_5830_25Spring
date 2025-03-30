@@ -172,13 +172,13 @@ def send_signed_msg(proof, random_leaf):
     contract = w3.eth.contract(address=address, abi=abi)
 
     # Build transaction
-    tx = contract.functions.claimPrime(
-        random_leaf,
-        proof
+    tx = contract.functions.submit(
+        random_leaf,  # The prime in bytes32 format
+        proof         # Your Merkle proof
     ).build_transaction({
-        'chainId': 56,  # BSC chain ID
-        'gas': 200000,  # Adjust based on needs
-        'gasPrice': w3.to_wei('5', 'gwei'),
+        'chainId': chain_id,
+        'gas': 300000,  # Sufficient for Merkle proof verification
+        'gasPrice': w3.to_wei('5', 'gwei'),  # Adjust based on network conditions
         'nonce': w3.eth.get_transaction_count(acct.address),
     })
     
