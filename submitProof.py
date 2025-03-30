@@ -174,9 +174,10 @@ def send_signed_msg(proof, random_leaf):
     # Build transaction
     tx = contract.functions.submit(proof, random_leaf).build_transaction({
         'chainId': 56,  # BSC mainnet
-        'gas': 500000,  # Sufficient gas for Merkle proof verification
-        'gasPrice': w3.to_wei('10', 'gwei'),  # Fair gas price
+        'from': acct.address,
         'nonce': nonce,
+        'gas': 500000,  # Increased gas limit
+        'gasPrice': w3.to_wei('10', 'gwei')
     })
     
     # Sign and send
