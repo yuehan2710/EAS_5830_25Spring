@@ -105,6 +105,8 @@ def build_merkle(leaves):
         tree.append(next_level)
         current_level = next_level
 
+    return tree
+
 
 def prove_merkle(merkle_tree, random_indx):
     """
