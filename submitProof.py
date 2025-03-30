@@ -72,14 +72,7 @@ def convert_leaves(primes_list):
 
     # TODO YOUR CODE HERE
 
-    leaves = []
-    for p in primes_list:
-        # Convert prime to 32-byte big endian and hash it
-        b = int.to_bytes(p, 32, 'big')  # bytes32
-        h = Web3.solidity_keccak(['bytes32'], [b])  # hash as leaf
-        leaves.append(h)
-
-    return leaves
+    return [Web3.solidity_keccak(['bytes32'], [int.to_bytes(p, 32, 'big')]) for p in primes_list]
 
 
 def build_merkle(leaves):
@@ -92,15 +85,20 @@ def build_merkle(leaves):
 
     #TODO YOUR CODE HERE
     
-    tree = [leaves]
+    assert all(isinstance(leaf, bytes) and len(leaf) == 32 for leaf in leaves), "Leaves must be bytes32"
+
+    tree = [leaves]  # start with leaf level
     current_level = leaves
 
     while len(current_level) > 1:
         next_level = []
         for i in range(0, len(current_level), 2):
             left = current_level[i]
-            right = current_level[i + 1] if i + 1 < len(current_level) else left
-            parent = hash_pair(left, right)  # must sort inside
+            if i + 1 < len(current_level):
+                right = current_level[i + 1]
+            else:
+                right = left  # duplicate last for odd number
+            parent = hash_pair(left, right)  # sorts internally
             next_level.append(parent)
         tree.append(next_level)
         current_level = next_level
