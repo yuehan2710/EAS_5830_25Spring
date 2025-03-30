@@ -168,18 +168,19 @@ def send_signed_msg(proof, random_leaf):
     # Create contract instance
     contract = w3.eth.contract(address=contract_address, abi=abi)
     
-    # Prepare transaction
-    tx = {
-        'to': contract_address,
-        'data': contract.encodeABI(fn_name='submit', args=[proof, random_leaf]),
-        'chainId': 56,  # BSC chain ID
-        'gas': 500000,
-        'gasPrice': w3.to_wei('10', 'gwei'),
-        'nonce': w3.eth.get_transaction_count(acct.address),
-    }
+    # Get transaction count for nonce
+    nonce = w3.eth.get_transaction_count(acct.address)
     
-    # Sign and send raw transaction
-    signed_tx = acct.sign_transaction(tx)
+    # Build transaction
+    tx = contract.functions.submit(proof, random_leaf).build_transaction({
+        'chainId': 56,  # BSC mainnet
+        'gas': 500000,  # Sufficient gas for Merkle proof verification
+        'gasPrice': w3.to_wei('10', 'gwei'),  # Fair gas price
+        'nonce': nonce,
+    })
+    
+    # Sign and send
+    signed_tx = w3.eth.account.sign_transaction(tx, acct.key)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
     
     return tx_hash.hex()
