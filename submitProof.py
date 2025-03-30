@@ -142,19 +142,15 @@ def sign_challenge(challenge):
     """
 
     acct = get_account()
-
-    addr = acct.address
-    eth_sk = acct.key
-
-    # TODO YOUR CODE HERE
-
-    # Convert the challenge string to bytes and prepare it for signing
-    message = encode_defunct(text=challenge)
-
-    # Sign the message
-    eth_sig_obj = acct.sign_message(message)
-
-    return addr, eth_sig_obj.signature.hex()
+    w3 = Web3()  # Initialize Web3 if not already done
+    
+    # Convert challenge to bytes (UTF-8 encoded)
+    message = challenge.encode('utf-8')
+    
+    # Sign the raw message (without EIP-191 prefix)
+    signature = w3.eth.sign(acct.address, message)
+    
+    return acct.address, signature.hex()
 
 
 
