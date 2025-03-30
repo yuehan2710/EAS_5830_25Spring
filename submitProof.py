@@ -25,7 +25,7 @@ def merkle_assignment():
     tree = build_merkle(leaves)
 
     # Select a random leaf and create a proof for that leaf
-    random_leaf_index = random.randint(1, 8192) #TODO generate a random index from primes to claim (0 is already claimed)
+    random_leaf_index = random.randint(1, 8191) #TODO generate a random index from primes to claim (0 is already claimed)
     proof = prove_merkle(tree, random_leaf_index)
 
     # This is the same way the grader generates a challenge for sign_challenge()
@@ -91,7 +91,7 @@ def build_merkle(leaves):
     """
 
     #TODO YOUR CODE HERE
-
+    
     tree = [leaves]
     current_level = leaves
 
@@ -99,8 +99,8 @@ def build_merkle(leaves):
         next_level = []
         for i in range(0, len(current_level), 2):
             left = current_level[i]
-            right = current_level[i+1] if i+1 < len(current_level) else left
-            parent = hash_pair(left, right)  # sorted inside
+            right = current_level[i + 1] if i + 1 < len(current_level) else left
+            parent = hash_pair(left, right)  # must sort inside
             next_level.append(parent)
         tree.append(next_level)
         current_level = next_level
