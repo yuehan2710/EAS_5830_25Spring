@@ -100,12 +100,10 @@ def build_merkle(leaves):
         for i in range(0, len(current_level), 2):
             left = current_level[i]
             right = current_level[i+1] if i+1 < len(current_level) else left
-            parent = hash_pair(left, right)
+            parent = hash_pair(left, right)  # sorted inside
             next_level.append(parent)
         tree.append(next_level)
         current_level = next_level
-
-    return tree
 
 
 def prove_merkle(merkle_tree, random_indx):
@@ -117,8 +115,9 @@ def prove_merkle(merkle_tree, random_indx):
     """
     merkle_proof = []
     # TODO YOUR CODE HERE
-    for level in merkle_tree[:-1]:
-        sibling_index = random_indx ^ 1  # XOR flip LSB to get sibling
+
+    for level in merkle_tree[:-1]:  # Don't include root
+        sibling_index = random_indx ^ 1
         if sibling_index < len(level):
             merkle_proof.append(level[sibling_index])
         random_indx //= 2
