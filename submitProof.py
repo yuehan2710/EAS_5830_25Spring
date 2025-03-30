@@ -175,7 +175,7 @@ def send_signed_msg(proof, random_leaf):
         'data': contract.functions.submit(proof, random_leaf).build_transaction(
             {'from': acct.address}
         )['data'],
-        'chainId': 56,  # BSC chain ID
+        'chainId': 97,  # BSC chain ID
         'gas': 500000,
         'gasPrice': w3.to_wei('10', 'gwei'),
         'nonce': w3.eth.get_transaction_count(acct.address),
