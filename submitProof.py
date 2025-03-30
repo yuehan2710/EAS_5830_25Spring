@@ -168,16 +168,27 @@ def send_signed_msg(proof, random_leaf):
     # Create contract instance
     contract = w3.eth.contract(address=contract_address, abi=abi)
     
-    # Build and send transaction
-    tx = contract.functions.submit(random_leaf, proof).build_transaction({
+    # Convert proof elements to bytes32
+    bytes32_proof = [Web3.to_bytes(hexstr=p.hex()) if isinstance(p, bytes) else p for p in proof]
+    
+    # Build and send transaction with correct argument order
+    tx = contract.functions.submit(
+        bytes32_proof,  # bytes32[] array
+        Web3.to_bytes(hexstr=random_leaf.hex()) if isinstance(random_leaf, bytes) else random_leaf  # bytes32
+    ).build_transaction({
         'chainId': 56,  # BSC chain ID
-        'gas': 300000,
-        'gasPrice': w3.to_wei('5', 'gwei'),
+        'gas': 500000,  # Increased gas limit
+        'gasPrice': w3.to_wei('10', 'gwei'),  # Higher gas price
         'nonce': w3.eth.get_transaction_count(acct.address),
     })
     
     signed_tx = w3.eth.account.sign_transaction(tx, acct.key)
     tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+    
+    # Wait for transaction receipt
+    receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+    if receipt.status != 1:
+        raise ValueError("Transaction failed")
     
     return tx_hash.hex()
 
