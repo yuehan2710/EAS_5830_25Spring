@@ -163,29 +163,32 @@ def send_signed_msg(proof, random_leaf):
     """
     chain = 'bsc'
 
-    acct = get_account()
+    acct = get_account()  # LocalAccount object
     address, abi = get_contract_info(chain)
     w3 = connect_to(chain)
 
-    # TODO YOUR CODE HERE
-    #tx_hash = 'placeholder'
-
+    # Instantiate the contract
     contract = w3.eth.contract(address=address, abi=abi)
+
+    # Get the next nonce for our account
     nonce = w3.eth.get_transaction_count(acct.address)
 
+    # Build the transaction
     tx = contract.functions.submit(proof, random_leaf).build_transaction({
         'from': acct.address,
         'nonce': nonce,
-        'gas': 300000,
+        'gas': 300000,  # Adjust as needed
         'gasPrice': w3.to_wei('10', 'gwei')
     })
 
-    signed_tx = w3.eth.account.sign_transaction(tx, private_key=acct.key)
+    # Sign the transaction with our private key
+    signed_tx = acct.sign_transaction(tx)
+
+    # Send the raw transaction to the network
     tx_hash = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
 
+    print("Submitted transaction with hash:", w3.to_hex(tx_hash))
     return w3.to_hex(tx_hash)
-
-    #return tx_hash
 
 
 # Helper functions that do not need to be modified
