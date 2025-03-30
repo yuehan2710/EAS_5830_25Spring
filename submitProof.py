@@ -72,7 +72,15 @@ def convert_leaves(primes_list):
 
     # TODO YOUR CODE HERE
 
-    return [Web3.solidity_keccak(['bytes32'], [int.to_bytes(p, 32, 'big')]) for p in primes_list]
+    leaves = []
+    for p in primes_list:
+        # Convert to fixed 32-byte big-endian
+        b = int.to_bytes(p, 32, 'big')  # Must be 32 bytes
+        # Hash the bytes32 representation of the integer
+        h = Web3.solidity_keccak(['bytes32'], [b])  # OpenZeppelin expects hash of bytes32
+        leaves.append(h)
+        
+    return leaves
 
 
 def build_merkle(leaves):
