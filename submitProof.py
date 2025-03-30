@@ -181,10 +181,24 @@ def send_signed_msg(proof, random_leaf):
         'nonce': w3.eth.get_transaction_count(acct.address),
     }
     
-    # Sign and send
-    signed_tx = acct.sign_transaction(tx)
-    tx_hash = w3.eth.send_raw_transaction(signed_tx['rawTransaction'])
+    # Sign using the most reliable method
+    if hasattr(acct, 'sign_transaction'):
+        signed = acct.sign_transaction(tx)
+    else:
+        # Fallback for different Web3 versions
+        signed = w3.eth.account.sign_transaction(tx, acct.key)
     
+    # Get raw transaction (handles all version cases)
+    raw_tx = getattr(signed, 'rawTransaction', 
+                    getattr(signed, 'raw_transaction', None))
+    if raw_tx is None and isinstance(signed, dict):
+        raw_tx = signed.get('rawTransaction')
+    
+    if not raw_tx:
+        raise ValueError("Could not extract raw transaction")
+    
+    # Send and return hash
+    tx_hash = w3.eth.send_raw_transaction(raw_tx)
     return tx_hash.hex()
 
 
