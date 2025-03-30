@@ -141,20 +141,14 @@ def sign_challenge(challenge):
         claimed a prime
     """
 
-    # Your private key (replace with yours)
-    private_key = "0x59de36ffcf84a15815fae4392a49d7bc7992d101882301f1f8db7860eeff81f3"
+    # Get the account from sk.txt
+    acct = get_account()
     
-    # Initialize Web3 (no provider needed for signing)
-    w3 = Web3()
-    
-    # Create an account from the private key
-    acct = Account.from_key(private_key)
-    
-    # Encode the challenge in EIP-191 format (standard for Ethereum messages)
+    # Encode the challenge in EIP-191 format
     message = encode_defunct(text=challenge)
     
-    # Sign the message
-    signed_msg = w3.eth.account.sign_message(message, private_key=private_key)
+    # Sign the message (EIP-191 compliant)
+    signed_msg = acct.sign_message(message)
     
     # Return address and hex signature
     return acct.address, signed_msg.signature.hex()
