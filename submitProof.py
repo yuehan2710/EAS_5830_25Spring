@@ -173,7 +173,6 @@ def send_signed_msg(proof, random_leaf):
     
     # Build transaction
     tx = contract.functions.submit(proof, random_leaf).build_transaction({
-        'chainId': 56,  # BSC mainnet
         'from': acct.address,
         'nonce': nonce,
         'gas': 500000,  # Increased gas limit
