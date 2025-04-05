@@ -58,6 +58,34 @@ contract AMM is AccessControl{
 
 		//YOUR CODE HERE 
 
+    address buyToken = (sellToken == tokenA) ? tokenB : tokenA;
+
+    uint256 reserveSell = ERC20(sellToken).balanceOf(address(this));
+    uint256 reserveBuy = ERC20(buyToken).balanceOf(address(this));
+
+    // Pull the token from the trader
+    require(
+        ERC20(sellToken).transferFrom(msg.sender, address(this), sellAmount),
+        "Transfer failed"
+    );
+
+    // Apply fee (feebps is in basis points, so divide by 10,000)
+    uint256 amountInWithFee = (sellAmount * (10000 - feebps)) / 10000;
+
+    // Use Uniswap constant product formula: Δy = (y * Δx) / (x + Δx)
+    uint256 amountOut = (reserveBuy * amountInWithFee) / (reserveSell + amountInWithFee);
+
+    require(amountOut > 0, "Insufficient output");
+
+    // Transfer buy token to user
+    require(
+        ERC20(buyToken).transfer(msg.sender, amountOut),
+        "Output transfer failed"
+    );
+
+    emit Swap(sellToken, buyToken, sellAmount, amountOut);
+
+
 		uint256 new_invariant = ERC20(tokenA).balanceOf(address(this))*ERC20(tokenB).balanceOf(address(this));
 		require( new_invariant >= invariant, 'Bad trade' );
 		invariant = new_invariant;
@@ -69,6 +97,24 @@ contract AMM is AccessControl{
 	function provideLiquidity( uint256 amtA, uint256 amtB ) public {
 		require( amtA > 0 || amtB > 0, 'Cannot provide 0 liquidity' );
 		//YOUR CODE HERE
+
+    require(
+    ERC20(tokenA).transferFrom(msg.sender, address(this), amtA),
+    "Transfer of tokenA failed"
+    );
+    require(
+        ERC20(tokenB).transferFrom(msg.sender, address(this), amtB),
+        "Transfer of tokenB failed"
+    );
+
+    // Only set the initial invariant if it's the first provision
+    if (invariant == 0) {
+        invariant = ERC20(tokenA).balanceOf(address(this)) * ERC20(tokenB).balanceOf(address(this));
+    } else {
+        // Optionally enforce price ratio constraint here, if you want strict provisioning
+        invariant = ERC20(tokenA).balanceOf(address(this)) * ERC20(tokenB).balanceOf(address(this));
+    }
+
 		emit LiquidityProvision( msg.sender, amtA, amtB );
 	}
 
