@@ -50,3 +50,68 @@ def scan_blocks(chain, contract_info="contract_info.json"):
         return 0
     
         #YOUR CODE HERE
+
+    # Connect to blockchain
+    w3 = connect_to(chain)
+    other_chain = 'destination' if chain == 'source' else 'source'
+    other_w3 = connect_to(other_chain)
+
+    # Load contract ABIs and addresses
+    contracts = get_contract_info(contract_info=contract_info)
+    contract_address = contracts[chain]['address']
+    abi = contracts[chain]['abi']
+    other_contract_address = contracts[other_chain]['address']
+    other_abi = contracts[other_chain]['abi']
+
+    contract = w3.eth.contract(address=contract_address, abi=abi)
+    other_contract = other_w3.eth.contract(address=other_contract_address, abi=other_abi)
+
+    # Load warden credentials
+    warden_private_key = contracts['warden']['private_key']
+    warden_address = contracts['warden']['address']
+
+    # Get latest block number
+    latest_block = w3.eth.block_number
+
+    # Check past 5 blocks
+    for block_number in range(latest_block - 5, latest_block + 1):
+        block = w3.eth.get_block(block_number, full_transactions=True)
+
+        for tx in block.transactions:
+            receipt = w3.eth.get_transaction_receipt(tx['hash'])
+            logs = contract.events.Deposit().process_receipt(receipt) if chain == 'source' else \
+                   contract.events.Unwrap().process_receipt(receipt)
+
+            for event in logs:
+                args = event['args']
+
+                if chain == 'source':
+                    # Call wrap on destination
+                    tx = other_contract.functions.wrap(
+                        args['from'], args['to'], args['amount'],
+                        args['nonce'], args['symbol'],
+                        args['sourceToken']
+                    ).build_transaction({
+                        'chainId': other_w3.eth.chain_id,
+                        'gas': 500000,
+                        'gasPrice': other_w3.eth.gas_price,
+                        'nonce': other_w3.eth.get_transaction_count(warden_address),
+                    })
+
+                else:
+                    # Call withdraw on source
+                    tx = other_contract.functions.withdraw(
+                        args['from'], args['to'], args['amount'],
+                        args['nonce'], args['symbol'],
+                        args['destinationToken']
+                    ).build_transaction({
+                        'chainId': other_w3.eth.chain_id,
+                        'gas': 500000,
+                        'gasPrice': other_w3.eth.gas_price,
+                        'nonce': other_w3.eth.get_transaction_count(warden_address),
+                    })
+
+                signed_tx = other_w3.eth.account.sign_transaction(tx, private_key=warden_private_key)
+                tx_hash = other_w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+                print(f"✅ Relayed transaction: {tx_hash.hex()}")
+
